@@ -16,10 +16,10 @@
   };
 
   outputs = { self, nixpkgs, nixCats, ... }@inputs: {
-    nixosConfigurations.default = nixpkgs.lib.nixosSystem {
+    nixosConfigurations.station = nixpkgs.lib.nixosSystem {
       specialArgs = { inherit inputs; };
       modules = [
-        ./hosts/default/configuration.nix
+        ./hosts/station/configuration.nix
         inputs.stylix.nixosModules.stylix
         inputs.home-manager.nixosModules.default
         ({ pkgs, ... }: {
