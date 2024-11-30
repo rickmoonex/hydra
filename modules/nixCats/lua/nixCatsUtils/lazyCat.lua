@@ -1,31 +1,17 @@
 local M = {}
 
-function M.mergePluginTables(table1, table2)
-  return vim.tbl_extend('keep', table1, table2)
-end
-
----used to help provide the list of plugin names for lazy wrapper.
----@param pluginTable table|string[]|nil
----@return string[]
-function M.getTableNamesOrListValues(pluginTable)
-  if pluginTable == nil then
-    return {}
-  end
-  for key, _ in pairs(pluginTable) do
-    if type(key) ~= 'string' then
-      return vim.tbl_values(pluginTable)
-    end
-    break
-  end
-  return vim.tbl_keys(pluginTable)
-end
-
 ---lazy.nvim wrapper
----@param pluginTable table|string[]|nil
----@param nixLazyPath string|nil
----@param lazySpecs any
----@param lazyCFG table
-function M.setup(pluginTable, nixLazyPath, lazySpecs, lazyCFG)
+---@overload fun(nixLazyPath: string|nil, lazySpec: any, opts: table)
+---@overload fun(nixLazyPath: string|nil, opts: table)
+function M.setup(nixLazyPath, lazySpec, opts)
+  local lazySpecs = nil
+  local lazyCFG = nil
+  if opts == nil and type(lazySpec) == "table" and lazySpec.spec then
+    lazyCFG = lazySpec
+  else
+    lazySpecs = lazySpec
+    lazyCFG = opts
+  end
 
   local function regularLazyDownload()
     local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
@@ -42,39 +28,31 @@ function M.setup(pluginTable, nixLazyPath, lazySpecs, lazyCFG)
     return lazypath
   end
 
-  -- location of the nixCats plugin in the store if loaded via nixCats.
-  local nixCatsPath = vim.g[ [[nixCats-special-rtp-entry-nixCats]] ]
+  local isNixCats = vim.g[ [[nixCats-special-rtp-entry-nixCats]] ] ~= nil
   local lazypath
-  -- No nixCats? Not nix. Do it normally
-  if nixCatsPath == nil then
+  if not isNixCats then
+    -- No nixCats? Not nix. Do it normally
     lazypath = regularLazyDownload()
     vim.opt.rtp:prepend(lazypath)
   else
-  -- Else, its nix, so we wrap lazy with a few extra config options
-
+    local nixCats = require('nixCats')
+    -- Else, its nix, so we wrap lazy with a few extra config options
     lazypath = nixLazyPath
     -- and also we probably dont have to download lazy either
     if lazypath == nil then
       lazypath = regularLazyDownload()
     end
 
-    -- If you wanted to know where nixCats puts everything in its final form to be included:
-    local myNeovimPackages = vim.g[ [[nixCats-special-rtp-entry-vimPackDir]] ] .. "/pack/myNeovimPackages"
-    local grammarDir = require('nixCats').pawsible.allPlugins.ts_grammar_plugin
-    local nixCatsConfigDir = require('nixCats').get([[nixCats_config_location]])
-
     local oldPath
     local lazypatterns
+    local fallback
     if type(lazyCFG) == "table" and type(lazyCFG.dev) == "table" then
-      if type(lazyCFG.dev.patterns) ~= 'table' then
-        lazypatterns = M.getTableNamesOrListValues(pluginTable)
-      else
-        local toInclude = lazyCFG.dev.patterns
-        vim.list_extend(toInclude, M.getTableNamesOrListValues(pluginTable))
-        lazypatterns = toInclude
-      end
+      lazypatterns = lazyCFG.dev.patterns
+      fallback = lazyCFG.dev.fallback
       oldPath = lazyCFG.dev.path
     end
+
+    local myNeovimPackages = nixCats.vimPackDir .. "/pack/myNeovimPackages"
 
     local newLazyOpts = {
       performance = {
@@ -104,25 +82,30 @@ function M.setup(pluginTable, nixLazyPath, lazySpecs, lazyCFG)
           end
           return path
         end,
-        patterns = lazypatterns or M.getTableNamesOrListValues(pluginTable),
+        patterns = lazypatterns or { "" },
+        fallback = fallback == nil and true or fallback,
       }
     }
-    lazyCFG = vim.tbl_extend("force", lazyCFG or {}, newLazyOpts)
-
+    lazyCFG = vim.tbl_deep_extend("force", lazyCFG or {}, newLazyOpts)
     -- do the reset we disabled without removing important stuff
+    local cfgdir = nixCats.configDir
     vim.opt.rtp = {
-      nixCatsConfigDir,
-      nixCatsPath,
-      grammarDir,
+      cfgdir,
+      nixCats.nixCatsPath,
+      nixCats.pawsible.allPlugins.ts_grammar_path,
       vim.fn.stdpath("data") .. "/site",
       lazypath,
       vim.env.VIMRUNTIME,
       vim.fn.fnamemodify(vim.v.progpath, ":p:h:h") .. "/lib/nvim",
-      nixCatsConfigDir .. "/after",
+      cfgdir .. "/after",
     }
   end
 
-  require('lazy').setup(lazySpecs, lazyCFG)
+  if lazySpecs then
+    require('lazy').setup(lazySpecs, lazyCFG)
+  else
+    require('lazy').setup(lazyCFG)
+  end
 end
 
 return M
