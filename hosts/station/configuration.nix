@@ -169,7 +169,7 @@ in
 
 environment.systemPackages = with pkgs; [
   # Text editors and IDEs
-  vim neovim vscode zed-editor  neovide jetbrains.idea-ultimate
+  vim neovim vscode zed-editor  neovide
   
     # jetbrains.idea-community-bin
   
@@ -179,10 +179,7 @@ environment.systemPackages = with pkgs; [
   # Programming languages and tools
   go lua python3 python3Packages.pip uv clang zig rustup
   nodePackages_latest.pnpm nodePackages_latest.yarn nodePackages_latest.nodejs
-  bun jdk maven gcc 
-
-  # Frappe Bench
-  redis wkhtmltopdf nginx uv mariadb
+  bun jdk maven gcc
 
   # Version control and development tools
   git gh lazygit lazydocker bruno gnumake coreutils nixfmt-rfc-style meson ninja
@@ -302,10 +299,6 @@ environment.systemPackages = with pkgs; [
     tailscale = {
       enable = true;
       useRoutingFeatures = "client";
-    };
-    ollama = {
-      enable=true;
-      acceleration = "cuda";
     };
     cron = {
       enable=true;
