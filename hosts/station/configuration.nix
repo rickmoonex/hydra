@@ -425,5 +425,8 @@ environment.systemPackages = with pkgs; [
     backupFileExtension = "backup";
   };
 
+  # Hope this doesn't break anything...
+  systemd.services.NetworkManager-wait-online.enable = lib.mkForce false;
+
   system.stateVersion = "24.05";
 }
