@@ -1,19 +1,17 @@
 { config, lib, pkgs, inputs, options, ... }:
 
 let
-  username = "vasu";
-  userDescription = "Vasu Jain";
+  username = "rick";
+  userDescription = "Rick Moonen";
   homeDirectory = "/home/${username}";
-  hostName = "rudra";
-  timeZone = "Asia/Kolkata";
+  hostName = "hydra-station";
+  timeZone = "Europe/Amsterdam";
 in
 {
   imports =
     [
       ./hardware-configuration.nix
       ./user.nix
-      ../../modules/nvidia-drivers.nix
-      ../../modules/nvidia-prime-drivers.nix
       ../../modules/intel-drivers.nix
       inputs.home-manager.nixosModules.default
     ];
@@ -246,9 +244,6 @@ environment.systemPackages = with pkgs; [
   # Networking
   networkmanagerapplet
 
-  # Education
-  ciscoPacketTracer8 wireshark ventoy
-
   # Music and streaming
   youtube-music spotify
 
@@ -304,10 +299,6 @@ environment.systemPackages = with pkgs; [
     };
     cloudflare-warp.enable = true;
     supergfxd.enable = true;
-    asusd = {
-      enable = true;
-      enableUserService = true;
-    };
     tailscale = {
       enable = true;
       useRoutingFeatures = "client";

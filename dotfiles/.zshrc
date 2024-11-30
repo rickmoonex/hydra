@@ -72,6 +72,7 @@ alias c='clear' # clear terminal
 alias e='exit'
 alias mkdir='mkdir -p'
 alias vim='nixCats'
+alias nvim='nixCats'
 alias grep='rg --color=auto'
 alias ssn='sudo shutdown now'
 alias srn='sudo reboot now'
